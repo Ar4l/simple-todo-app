@@ -146,6 +146,9 @@ function deleteTodo(id) {
   todos.splice(index, 1);
   saveTodos(todos);
   render();
+  // Move focus to the next item so the user can keep deleting with keyboard
+  const items = document.querySelectorAll('.todo-item');
+  items[Math.min(index, items.length - 1)].focus();
 }
 
 // Form submit
