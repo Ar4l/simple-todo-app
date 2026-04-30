@@ -15,5 +15,5 @@ Todos are persisted in `localStorage`.
 ## Features
 
 - Add, edit, and delete todo items
-- Check off items — completed items move to the bottom with a timestamp
+- Check off items - completed items move to the bottom with a timestamp
 - Data survives page refreshes

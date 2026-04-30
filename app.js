@@ -87,7 +87,7 @@ function buildItem(todo) {
   actions.className = 'todo-actions';
 
   const deleteBtn = document.createElement('button');
-  deleteBtn.textContent = '✕';
+  deleteBtn.textContent = 'x';
   deleteBtn.title = 'Delete';
   deleteBtn.addEventListener('click', () => deleteTodo(todo.id));
 
