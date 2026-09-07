@@ -16,6 +16,7 @@ function createTodo(text) {
   return {
     id: crypto.randomUUID(),
     text: text.trim(),
+    description: "",
     completed: false,
     completedAt: null,
     createdAt: new Date().toISOString(),
@@ -95,6 +96,37 @@ function buildItem(todo) {
 
   body.appendChild(textEl);
 
+  if (todo.description && todo.description.trim() !== "") {
+    const descriptionContainer = document.createElement('div');
+    descriptionContainer.className = 'todo-description-container';
+
+    const toggle = document.createElement('span');
+    toggle.className = 'description-toggle';
+    toggle.textContent = '▶';
+    toggle.style.cursor = 'pointer';
+    toggle.title = 'Toggle description';
+
+    const descriptionText = document.createElement('div');
+    descriptionText.className = 'todo-description';
+    descriptionText.textContent = todo.description;
+    descriptionText.style.display = 'none';
+    descriptionText.title = 'Click to edit';
+
+    descriptionContainer.appendChild(toggle);
+    descriptionContainer.appendChild(descriptionText);
+    body.appendChild(descriptionContainer);
+
+    toggle.addEventListener('click', () => {
+      const isHidden = descriptionText.style.display === 'none';
+      descriptionText.style.display = isHidden ? 'block' : 'none';
+      toggle.textContent = isHidden ? '▼' : '▶';
+    });
+
+    descriptionText.addEventListener('click', () => {
+      startEditDescription(todo.id, li, descriptionText);
+    });
+  }
+
   if (todo.completed && todo.completedAt) {
     const stamp = document.createElement('div');
     stamp.className = 'completed-at';
@@ -147,6 +179,45 @@ function startEdit(id, li, textEl) {
     if (e.key === 'Enter') input.blur();
     if (e.key === 'Escape') {
       input.value = todo.text;
+      input.blur();
+    }
+  });
+}
+
+function startEditDescription(id, li, descEl) {
+  const todo = todos.find(t => t.id === id);
+  if (!todo || todo.completed) return;
+
+  const input = document.createElement('textarea');
+  input.className = 'todo-text-input';
+  input.style.width = '100%';
+  input.style.height = 'auto';
+  input.style.minHeight = '60px';
+  input.value = todo.description;
+
+  descEl.replaceWith(input);
+  input.focus();
+  input.select();
+
+  function commit() {
+    const newDesc = input.value.trim();
+    if (newDesc !== todo.description) {
+      todo.description = newDesc;
+      saveTodos(todos);
+    }
+    render();
+  }
+
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      if (!input.value.includes('\n')) {
+        e.preventDefault();
+        input.blur();
+      }
+    }
+    if (e.key === 'Escape') {
+      input.value = todo.description;
       input.blur();
     }
   });
