@@ -78,5 +78,6 @@ jobs:
           NUM: ${{ github.event.pull_request.number }}
           BASE: ${{ steps.deploy.outputs.page_url }}
         run: |
+          BASE="${BASE/http:\/\//https://}"
           gh pr comment "$NUM" --repo "$GITHUB_REPOSITORY" --edit-last --create-if-none \
             --body "Preview of this PR: ${BASE}pr/${NUM}/?demo  (before: ${BASE}?demo)"
