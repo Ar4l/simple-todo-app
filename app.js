@@ -1,11 +1,14 @@
 const STORAGE_KEY = 'todos';
 
 function loadTodos() {
+  let list;
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    list = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
   } catch {
     return [];
   }
+  // Backfill the optional description field for todos saved before it existed.
+  return list.map(t => ({ description: '', ...t }));
 }
 
 function saveTodos(todos) {
@@ -19,8 +22,12 @@ function createTodo(text) {
     completed: false,
     completedAt: null,
     createdAt: new Date().toISOString(),
+    description: '',
   };
 }
+
+// Track which todos currently have their description panel expanded.
+const expanded = new Set();
 
 function formatTimestamp(iso) {
   const d = new Date(iso);
@@ -95,6 +102,37 @@ function buildItem(todo) {
 
   body.appendChild(textEl);
 
+  // Optional description panel (hidden by default)
+  if (expanded.has(todo.id)) {
+    const desc = document.createElement('textarea');
+    desc.className = 'todo-description-input';
+    desc.rows = 3;
+    desc.value = todo.description || '';
+    desc.placeholder = 'Add a description...';
+
+    function commit() {
+      const value = desc.value.trim();
+      if (value !== (todo.description || '')) {
+        todo.description = value;
+        saveTodos(todos);
+      }
+    }
+
+    desc.addEventListener('blur', commit);
+    desc.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        desc.blur();
+      }
+      if (e.key === 'Escape') {
+        desc.value = todo.description || '';
+        desc.blur();
+      }
+    });
+
+    body.appendChild(desc);
+  }
+
   if (todo.completed && todo.completedAt) {
     const stamp = document.createElement('div');
     stamp.className = 'completed-at';
@@ -106,11 +144,23 @@ function buildItem(todo) {
   const actions = document.createElement('div');
   actions.className = 'todo-actions';
 
+  const descBtn = document.createElement('button');
+  const isOpen = expanded.has(todo.id);
+  descBtn.textContent = isOpen ? '▼' : '▶';
+  descBtn.title = 'Description';
+  descBtn.setAttribute('aria-expanded', String(isOpen));
+  descBtn.addEventListener('click', () => {
+    if (expanded.has(todo.id)) expanded.delete(todo.id);
+    else expanded.add(todo.id);
+    render();
+  });
+
   const deleteBtn = document.createElement('button');
   deleteBtn.textContent = 'x';
   deleteBtn.title = 'Delete';
   deleteBtn.addEventListener('click', () => deleteTodo(todo.id));
 
+  actions.appendChild(descBtn);
   actions.appendChild(deleteBtn);
 
   li.appendChild(checkbox);
@@ -168,7 +218,7 @@ function deleteTodo(id) {
   render();
   // Move focus to the next item's delete button so the user can keep deleting with keyboard
   const items = document.querySelectorAll('.todo-item');
-  items[Math.min(index, items.length - 1)].querySelector('.todo-actions button').focus();
+  items[Math.min(index, items.length - 1)].querySelector('.todo-actions button:last-child').focus();
 }
 
 // Form submit

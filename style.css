@@ -144,6 +144,23 @@ button:hover {
   outline: none;
 }
 
+.todo-description-input {
+  width: 100%;
+  margin-top: 0.4rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0.35rem 0.5rem;
+  resize: vertical;
+  outline: none;
+}
+
+.todo-description-input:focus {
+  border-color: #555;
+}
+
 .completed-at {
   font-size: 0.75rem;
   color: #888;
