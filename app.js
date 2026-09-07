@@ -19,6 +19,7 @@ function createTodo(text) {
     completed: false,
     completedAt: null,
     createdAt: new Date().toISOString(),
+    description: '',
   };
 }
 
@@ -28,6 +29,9 @@ function formatTimestamp(iso) {
 }
 
 let todos = loadTodos();
+
+// Which todos currently have their description expanded (in-memory UI state).
+const expanded = new Set();
 
 // Visiting index.html?demo on an empty list seeds a few sample todos.
 const SAMPLE_TODOS = [
@@ -95,6 +99,20 @@ function buildItem(todo) {
 
   body.appendChild(textEl);
 
+  if (expanded.has(todo.id)) {
+    const descEl = document.createElement('div');
+    descEl.className = 'todo-description';
+    if (todo.description) {
+      descEl.textContent = todo.description;
+    } else {
+      descEl.className += ' placeholder';
+      descEl.textContent = 'Add a description...';
+    }
+    descEl.title = 'Click to edit description';
+    descEl.addEventListener('click', () => startDescEdit(todo.id, descEl));
+    body.appendChild(descEl);
+  }
+
   if (todo.completed && todo.completedAt) {
     const stamp = document.createElement('div');
     stamp.className = 'completed-at';
@@ -112,6 +130,21 @@ function buildItem(todo) {
   deleteBtn.addEventListener('click', () => deleteTodo(todo.id));
 
   actions.appendChild(deleteBtn);
+
+  const toggleBtn = document.createElement('button');
+  toggleBtn.className = 'todo-desc-toggle';
+  toggleBtn.textContent = expanded.has(todo.id) ? '▼' : '▶';
+  toggleBtn.title = 'Toggle description';
+  toggleBtn.setAttribute('aria-expanded', String(expanded.has(todo.id)));
+  toggleBtn.addEventListener('click', () => {
+    if (expanded.has(todo.id)) {
+      expanded.delete(todo.id);
+    } else {
+      expanded.add(todo.id);
+    }
+    render();
+  });
+  actions.appendChild(toggleBtn);
 
   li.appendChild(checkbox);
   li.appendChild(body);
@@ -148,6 +181,40 @@ function startEdit(id, li, textEl) {
     if (e.key === 'Escape') {
       input.value = todo.text;
       input.blur();
+    }
+  });
+}
+
+function startDescEdit(id, descEl) {
+  const todo = todos.find(t => t.id === id);
+  if (!todo) return;
+
+  const textarea = document.createElement('textarea');
+  textarea.className = 'todo-desc-input';
+  textarea.rows = 3;
+  textarea.value = todo.description || '';
+
+  descEl.replaceWith(textarea);
+  textarea.focus();
+
+  let done = false;
+  function commit(save) {
+    if (done) return;
+    done = true;
+    if (save) {
+      todo.description = textarea.value.trim();
+      saveTodos(todos);
+    }
+    render();
+  }
+
+  textarea.addEventListener('blur', () => commit(true));
+  textarea.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      commit(true);
+    } else if (e.key === 'Escape') {
+      commit(false);
     }
   });
 }

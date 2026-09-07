@@ -169,6 +169,41 @@ button:hover {
   color: #222;
 }
 
+.todo-desc-toggle {
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 0.25rem 0.3rem;
+}
+
+.todo-description {
+  margin-top: 0.4rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.9rem;
+  color: #444;
+  white-space: pre-wrap;
+  word-break: break-word;
+  cursor: pointer;
+  border: 1px dashed #ddd;
+  border-radius: 4px;
+}
+
+.todo-description.placeholder {
+  color: #999;
+  font-style: italic;
+}
+
+.todo-desc-input {
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.35rem 0.5rem;
+  font: inherit;
+  font-size: 0.9rem;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  outline: none;
+  resize: vertical;
+}
+
 .divider {
   text-align: center;
   font-size: 0.8rem;
