@@ -120,6 +120,41 @@ button:hover {
   cursor: pointer;
 }
 
+/* Description styling */
+.description-wrapper {
+  display: none;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+}
+
+.description-wrapper.expanded {
+  display: flex;
+}
+
+.todo-description {
+  font-size: 0.85rem;
+  color: #666;
+  margin-left: 2px;
+  padding-top: 4px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Chevron */
+.chvron {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: #888;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+
+.description-wrapper.expanded .chevron {
+  transform: rotate(90deg);
+}
+
 .todo-body {
   flex: 1;
   min-width: 0;
@@ -141,6 +176,16 @@ button:hover {
   border: 1px solid #aaa;
   border-radius: 4px;
   padding: 0.15rem 0.35rem;
+  outline: none;
+}
+
+.todo-description-input {
+  width: 100%;
+  font-size: 0.85rem;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  padding: 0.25rem 0.35rem;
+  resize: vertical;
   outline: none;
 }
 
