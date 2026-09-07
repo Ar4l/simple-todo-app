@@ -1,0 +1,82 @@
+# Publishes the app to GitHub Pages.
+#   main            -> https://aral.cc/simple-todo-app/
+#   open PR #N      -> https://aral.cc/simple-todo-app/pr/N/
+# The whole site is rebuilt on every run, so closed PRs disappear automatically.
+# Only PRs from branches in this repo are previewed (fork PRs have a read-only token).
+name: pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  pull-requests: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Build site (main at root, open PRs under pr/N)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          FILES="index.html app.js style.css"
+          mkdir -p site
+          cp $FILES site/
+          [ -d assets ] && cp -r assets site/ || true
+
+          mkdir -p site/pr
+          {
+            echo '<!DOCTYPE html><meta charset="utf-8"><title>PR previews</title>'
+            echo '<style>body{font-family:system-ui,sans-serif;max-width:540px;margin:3rem auto;padding:0 1rem;color:#222}li{margin:.4rem 0}</style>'
+            echo '<h1>PR previews</h1><p><a href="../?demo">main (before)</a></p><ul>'
+          } > site/pr/index.html
+
+          gh api "repos/$REPO/pulls?state=open&per_page=100" \
+            --jq ".[] | select(.head.repo.full_name == \"$REPO\") | \"\(.number)\t\(.head.sha)\t\(.title)\"" \
+          | while IFS=$'\t' read -r num sha title; do
+              echo "preview: #$num ($sha) $title"
+              git fetch -q origin "pull/$num/head"
+              mkdir -p "site/pr/$num"
+              git archive FETCH_HEAD $FILES | tar -x -C "site/pr/$num"
+              printf '<li><a href="%s/?demo">#%s</a> %s</li>\n' "$num" "$num" "$title" >> site/pr/index.html
+            done
+          echo '</ul>' >> site/pr/index.html
+          find site -type f | sort
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+      - name: Comment preview link on the PR
+        if: github.event_name == 'pull_request' && github.event.action != 'closed'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUM: ${{ github.event.pull_request.number }}
+          BASE: ${{ steps.deploy.outputs.page_url }}
+        run: |
+          gh pr comment "$NUM" --repo "$GITHUB_REPOSITORY" --edit-last --create-if-none \
+            --body "Preview of this PR: ${BASE}pr/${NUM}/?demo  (before: ${BASE}?demo)"
