@@ -16,6 +16,7 @@ function createTodo(text) {
   return {
     id: crypto.randomUUID(),
     text: text.trim(),
+    description: "",
     completed: false,
     completedAt: null,
     createdAt: new Date().toISOString(),
@@ -87,12 +88,33 @@ function buildItem(todo) {
   const body = document.createElement('div');
   body.className = 'todo-body';
 
+  // Text element
   const textEl = document.createElement('span');
   textEl.className = 'todo-text';
   textEl.textContent = todo.text;
   textEl.title = 'Click to edit';
   textEl.addEventListener('click', () => startEdit(todo.id, li, textEl));
 
+  // Description area setup
+  const descriptionContainer = document.createElement('div');
+  descriptionContainer.className = 'todo-description-container';
+  descriptionContainer.style.display = 'none'; // Hidden by default
+  
+  const descriptionToggle = document.createElement('span');
+  descriptionToggle.className = 'description-toggle';
+  descriptionToggle.textContent = '▶';
+  descriptionToggle.title = 'View description';
+  descriptionToggle.addEventListener('click', () => toggleDescriptionVisibility(todo.id, li));
+  
+  const descriptionTextEl = document.createElement('p');
+  descriptionTextEl.className = 'todo-description-text';
+  descriptionTextEl.textContent = todo.description || '';
+  descriptionTextEl.title = 'Click to edit';
+  descriptionTextEl.addEventListener('click', () => startDescriptionEdit(todo.id, li, descriptionTextEl));
+
+  descriptionContainer.appendChild(descriptionToggle);
+  descriptionContainer.appendChild(descriptionTextEl);
+  
   body.appendChild(textEl);
 
   if (todo.completed && todo.completedAt) {
@@ -101,6 +123,14 @@ function buildItem(todo) {
     stamp.textContent = 'Completed ' + formatTimestamp(todo.completedAt);
     body.appendChild(stamp);
   }
+
+  // Add description container after text
+  if (todo.description) {
+    body.appendChild(descriptionContainer);
+    // Initialize description state: If it's empty (e.g., loaded from storage but description field exists), it might still need expansion logic. 
+    // Since it's hidden by default, we just append it.
+  }
+
 
   // Actions
   const actions = document.createElement('div');
@@ -138,8 +168,12 @@ function startEdit(id, li, textEl) {
     if (newText && newText !== todo.text) {
       todo.text = newText;
       saveTodos(todos);
+      render();
+    } else if (!newText) {
+      todo.text = '';
+      saveTodos(todos);
+      render();
     }
-    render();
   }
 
   input.addEventListener('blur', commit);
@@ -150,6 +184,50 @@ function startEdit(id, li, textEl) {
       input.blur();
     }
   });
+}
+
+function startDescriptionEdit(id, li, descriptionTextEl) {
+  const todo = todos.find(t => t.id === id);
+  if (!todo || todo.completed) return;
+
+  const textarea = document.createElement('textarea');
+  textarea.className = 'todo-description-input';
+  textarea.value = todo.description;
+
+  // Replace the text element with the textarea
+  descriptionTextEl.replaceWith(textarea);
+  textarea.focus();
+  
+  function commitDescription() {
+    const newDescription = textarea.value.trim();
+    // Update the todo object
+    todo.description = newDescription;
+    saveTodos(todos);
+    // Re-render to restore the display (text element)
+    render();
+  }
+
+  // Events for saving
+  textarea.addEventListener('blur', commitDescription);
+  textarea.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shift) { // Save on Enter
+      e.preventDefault();
+      commitDescription();
+    }
+    if (e.key === 'Escape') { // Cancel
+      textarea.value = todo.description;
+      render();
+    }
+  });
+}
+
+function toggleDescriptionVisibility(id, li) {
+  // Toggle visibility by checking current display state
+  const container = li.querySelector('.todo-description-container');
+  if (container) {
+    const isHidden = container.style.display === 'none' || container.style.display === '';
+    container.style.display = isHidden ? 'block' : 'none';
+  }
 }
 
 function toggleComplete(id) {
@@ -177,7 +255,11 @@ document.getElementById('add-form').addEventListener('submit', e => {
   const input = document.getElementById('new-todo');
   const text = input.value.trim();
   if (!text) return;
-  todos.unshift(createTodo(text));
+  
+  // Create new todo with default empty description
+  const newTodo = createTodo(text);
+  todos.unshift(newTodo);
+  
   saveTodos(todos);
   input.value = '';
   render();
