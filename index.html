@@ -16,7 +16,10 @@
     </header>
 
     <form id="add-form">
-      <input id="new-todo" type="text" placeholder="Add a new todo..." autocomplete="off">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <input id="new-todo" type="text" placeholder="Add a new todo..." autocomplete="off">
+        <input id="new-due-date" type="date" style="display:none;">
+      </div>
       <button type="submit">Add</button>
     </form>
 
