@@ -19,6 +19,7 @@ function createTodo(text) {
     completed: false,
     completedAt: null,
     createdAt: new Date().toISOString(),
+    dueDate: null,
   };
 }
 
