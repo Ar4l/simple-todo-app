@@ -29,6 +29,26 @@ function formatTimestamp(iso) {
 
 let todos = loadTodos();
 
+// Visiting index.html?demo on an empty list seeds a few sample todos.
+const SAMPLE_TODOS = [
+  ['Write the tool-call loop', false],
+  ['Fix #1: crash when deleting the last todo', false],
+  ['Add due dates (#3) and descriptions (#2)', false],
+  ['Pull a local model with ollama pull', true],
+  ['Fork simple-todo-app', true],
+];
+if (todos.length === 0 && new URLSearchParams(location.search).has('demo')) {
+  todos = SAMPLE_TODOS.map(([text, done], i) => {
+    const t = createTodo(text);
+    if (done) {
+      t.completed = true;
+      t.completedAt = new Date(Date.now() - (i + 1) * 3600 * 1000).toISOString();
+    }
+    return t;
+  });
+  saveTodos(todos);
+}
+
 function render() {
   const list = document.getElementById('todo-list');
   list.innerHTML = '';

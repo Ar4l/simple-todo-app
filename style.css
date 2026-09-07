@@ -16,10 +16,30 @@ body {
   margin: 0 auto;
 }
 
+header {
+  margin-bottom: 1.5rem;
+}
+
 h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   font-size: 2rem;
   font-weight: 700;
-  margin-bottom: 1.5rem;
+  letter-spacing: -0.01em;
+}
+
+.logo {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 6px;
+  background: #222 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M8 17l5 5 11-12' fill='none' stroke='%23fff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat;
+}
+
+.tagline {
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
+  color: #777;
 }
 
 #add-form {
@@ -68,6 +88,23 @@ button:hover {
   border-radius: 6px;
   padding: 0.6rem 0.75rem;
   margin-bottom: 0.5rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.todo-item:hover {
+  border-color: #c8c8c8;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+#todo-list:empty::after {
+  content: "Nothing to do yet. Add one above.";
+  display: block;
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #999;
+  font-size: 0.95rem;
+  border: 1px dashed #ddd;
+  border-radius: 6px;
 }
 
 .todo-item.completed {
@@ -139,4 +176,21 @@ button:hover {
   margin: 1rem 0 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+footer {
+  margin-top: 2.5rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+footer a {
+  color: #888;
+  text-decoration: none;
+}
+
+footer a:hover {
+  color: #222;
+  text-decoration: underline;
 }
