@@ -168,6 +168,7 @@ function deleteTodo(id) {
   render();
   // Move focus to the next item so the user can keep deleting with keyboard
   const items = document.querySelectorAll('.todo-item');
+  if (items.length === 0) return;
   items[Math.min(index, items.length - 1)].focus();
 }
 
