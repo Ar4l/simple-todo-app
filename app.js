@@ -19,7 +19,20 @@ function createTodo(text) {
     completed: false,
     completedAt: null,
     createdAt: new Date().toISOString(),
+    dueDate: null,
   };
+}
+
+function todayISO() {
+  const d = new Date();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return d.getFullYear() + '-' + m + '-' + day;
+}
+
+function formatDueDate(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
 function formatTimestamp(iso) {
@@ -95,6 +108,16 @@ function buildItem(todo) {
 
   body.appendChild(textEl);
 
+  if (todo.dueDate) {
+    const due = document.createElement('div');
+    due.className = 'due-date';
+    if (!todo.completed && todo.dueDate < todayISO()) {
+      due.classList.add('overdue');
+    }
+    due.textContent = 'due ' + formatDueDate(todo.dueDate);
+    body.appendChild(due);
+  }
+
   if (todo.completed && todo.completedAt) {
     const stamp = document.createElement('div');
     stamp.className = 'completed-at';
@@ -112,6 +135,14 @@ function buildItem(todo) {
   deleteBtn.addEventListener('click', () => deleteTodo(todo.id));
 
   actions.appendChild(deleteBtn);
+
+  if (!todo.completed) {
+    const dateBtn = document.createElement('button');
+    dateBtn.textContent = '📅';
+    dateBtn.title = 'Set due date';
+    dateBtn.addEventListener('click', () => startDueDateEdit(todo.id, dateBtn));
+    actions.appendChild(dateBtn);
+  }
 
   li.appendChild(checkbox);
   li.appendChild(body);
@@ -147,6 +178,43 @@ function startEdit(id, li, textEl) {
     if (e.key === 'Enter') input.blur();
     if (e.key === 'Escape') {
       input.value = todo.text;
+      input.blur();
+    }
+  });
+}
+
+function startDueDateEdit(id, btn) {
+  const todo = todos.find(t => t.id === id);
+  if (!todo || todo.completed) return;
+
+  const input = document.createElement('input');
+  input.type = 'date';
+  input.className = 'due-date-input';
+  input.value = todo.dueDate || '';
+
+  let changed = false;
+  let committed = false;
+
+  function commit() {
+    if (committed) return;
+    committed = true;
+    if (changed) {
+      todo.dueDate = input.value || null; // clearing the date removes the due date
+      saveTodos(todos);
+    }
+    render();
+  }
+
+  btn.replaceWith(input);
+  input.focus();
+  input.addEventListener('change', () => {
+    changed = true;
+    input.blur();
+  });
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      changed = false;
       input.blur();
     }
   });
