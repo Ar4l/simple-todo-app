@@ -48,6 +48,7 @@ jobs:
           mkdir -p site/pr
           {
             echo '<!DOCTYPE html><meta charset="utf-8"><title>PR previews</title>'
+            echo '<meta name="robots" content="noindex, nofollow">'
             echo '<style>body{font-family:system-ui,sans-serif;max-width:540px;margin:3rem auto;padding:0 1rem;color:#222}li{margin:.4rem 0}</style>'
             echo '<h1>PR previews</h1><p><a href="../?demo">main (before)</a></p><ul>'
           } > site/pr/index.html
