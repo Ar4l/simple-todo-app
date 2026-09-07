@@ -18,7 +18,7 @@ function createTodo(text) {
     text: text.trim(),
     completed: false,
     completedAt: null,
-    createdAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(), description: ''
   };
 }
 
@@ -101,6 +101,26 @@ function buildItem(todo) {
     stamp.textContent = 'Completed ' + formatTimestamp(todo.completedAt);
     body.appendChild(stamp);
   }
+  if (todo.completed && todo.description) {
+    const descriptionContainer = document.createElement('div');
+    descriptionContainer.className = 'description-container';
+
+    const toggle = document.createElement('button');
+    toggle.className = 'description-toggle';
+    toggle.textContent = '▶';
+    toggle.addEventListener('click', () => {
+      descriptionContainer.classList.toggle('hidden');
+    });
+
+    const desc = document.createElement('div');
+    desc.className = 'description';
+    desc.textContent = todo.description;
+    desc.addEventListener('click', () => startEditDescription(desc, todo.id));
+
+    descriptionContainer.appendChild(toggle);
+    descriptionContainer.appendChild(desc);
+    body.appendChild(descriptionContainer);
+  }
 
   // Actions
   const actions = document.createElement('div');
@@ -120,7 +140,38 @@ function buildItem(todo) {
   return li;
 }
 
-function startEdit(id, li, textEl) {
+function startEditDescription(element, id) {
+  const todo = todos.find(t => t.id === id);
+  if (!todo || !todo.completed) return;
+
+  const textarea = document.createElement('textarea');
+  textarea.className = 'description-edit';
+  textarea.value = todo.description;
+
+  element.replaceWith(textarea);
+  textarea.focus();
+  textarea.select();
+
+  function commit() {
+    const newText = textarea.value.trim();
+    if (newText !== todo.description) {
+      todo.description = newText;
+      saveTodos(todos);
+    }
+    render();
+  }
+
+  textarea.addEventListener('blur', commit);
+  textarea.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commit();
+    } else if (e.key === 'Escape') {
+      textarea.value = todo.description;
+      textarea.blur();
+    }
+  });
+}
   const todo = todos.find(t => t.id === id);
   if (!todo || todo.completed) return;
 
